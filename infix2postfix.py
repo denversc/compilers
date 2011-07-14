@@ -55,16 +55,19 @@ class Translator:
         self.t_rest()
 
     def t_rest(self):
-        if self.lookahead == "+":
-            self.lookahead = next(self.stream, None)
-            self.t_term()
-            self.result.write("+")
-            self.t_rest()
-        elif self.lookahead == "-":
-            self.lookahead = next(self.stream, None)
-            self.t_term()
-            self.result.write("-")
-            self.t_rest()
+        # The "rest" nonterminal is "tail-recursive", so recursive calls to
+        # t_rest() are replaced with a "while" loop to increase performance
+        while True:
+            if self.lookahead == "+":
+                self.lookahead = next(self.stream, None)
+                self.t_term()
+                self.result.write("+")
+            elif self.lookahead == "-":
+                self.lookahead = next(self.stream, None)
+                self.t_term()
+                self.result.write("-")
+            else:
+                break
 
     def t_term(self):
         if self.lookahead is None:
