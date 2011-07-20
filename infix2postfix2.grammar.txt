@@ -1,0 +1,64 @@
+Infix to Postfix Syntax Directed Translation Scheme
+By: Denver Coneybeare
+July 20, 2011
+
+Note that the uppercase 'E' character is used in place of the Greek letter
+lowercase Epsilon, which indicates an empty string.
+
+start:  exprs eof
+
+exprs:  e1 ; exprs
+        E
+
+e1:     e1 + e2     { print("+") }
+        e1 - e2     { print("-") }
+        e2
+
+e2:     e2 * term   { print("*") }
+        e2 / term   { print("/") }
+        e2 div term { print("div") }
+        e2 mod term { print("mod") }
+        term
+
+term:   ( e1 )
+        id          { print(id.lexeme) }
+        number      { print(number.lexeme) }
+
+The above grammar contains left recurision and therefore cannot be parsed with
+a predictive parser.
+
+The general rule for removing left recursion is as follows:
+
+    A: Aa | B
+
+becomes
+
+    A: B R
+    R: a R | E
+
+
+Here is the same grammar with left recursion removed:
+
+start:  exprs eof
+
+exprs:  e1 ; exprs
+        E
+
+e1:     e2 e1a
+
+e1a:    + e2 { print("+") } e1a
+        - e2 { print("-") } e1a
+        E
+
+e2:     term e2a
+
+e2a:    * term { print("*") } e2a
+        / term { print("/") } e2a
+        div term { print("div") } e2a
+        mod term { print("mod") } e2a
+        E
+
+term:   ( e1 )
+        id          { print(id.lexeme) }
+        number      { print(number.lexeme) }
+
