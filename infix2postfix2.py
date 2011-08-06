@@ -189,15 +189,53 @@ class Lexer:
 
 ################################################################################
 
+class Translator:
+    """
+    A translator that translates infix mathematical expressions to postfix.
+    """
+
+    def __init__(self, tokens):
+        """
+        Initializes a new instance of Translator.
+        *tokens* must be an iterable object that returns Token objects.
+        """
+        self.tokens = tokens
+        self.result = io.StringIO()
+        self.lookahead = None
+
+    def run(self):
+        self.nt_exprs()
+        self.match(Lexer.T_EOF)
+
+    def match(self, token_id):
+        lookahead = self.lookahead
+        if self.lookahead is None:
+            lookahead = next(self.tokens, None)
+            if lookahead is None:
+                raise ParseException("end-of-file but expected %s" % token_id)
+            self.lookahead = lookahead
+
+        if lookahead.id != token_id:
+            raise ParseException("syntax error: found %s but expected %s" %
+                (lookahead.id, token_id))
+
+        self.lookahead = next(self.tokens, None)
+        return lookahead
+    
+    def nt_exprs(self):
+        self.nt_e1()
+
+################################################################################
+
 def main():
     """
     The main method.
     Returns 0 on success, 1 on failure
     """
     lexer = Lexer(sys.stdin)
+    translator = Translator(iter(lexer))
     try:
-        for token in lexer:
-            print("Token(id=%s lexeme=%s)" % (token.id, token.lexeme))
+        translator.run()
     except ParseException as e:
         print("ERROR: at line %i column %i: %s" %
             (lexer.lineno, lexer.linecol, e))
